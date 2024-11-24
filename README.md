@@ -1,7 +1,3 @@
-Hier ist die aktualisierte README, die die Verwendung von **nodemon** berücksichtigt:
-
----
-
 # MITRE Network Tool
 
 Ein Tool zur Analyse von Netzwerk-Topologien basierend auf dem MITRE ATT&CK-Framework. Es bietet eine Weboberfläche zur Visualisierung und Bewertung von Angriffsvektoren sowie eine Backend-Logik für die Analyse.

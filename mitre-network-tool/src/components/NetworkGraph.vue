@@ -25,11 +25,15 @@
       style="width: 100%; height: 500px; border: 1px solid #ccc;"
       @click="handleClick"
     ></div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" style="display: none;"></div>
   </div>
 </template>
 
 <script>
 import cytoscape from "cytoscape";
+import axios from "axios"; // Für API-Aufrufe zum Backend
 
 export default {
   data() {
@@ -61,7 +65,10 @@ export default {
         Modem: [],
         Internet: [],
       },
-      selectedNodesList: [], // Initialisiert die Liste für ausgewählte Knoten
+      selectedNodesList: [],
+      showPopup: false,
+      selectedNodeAttributes: {},
+      currentNode: null,
     };
   },
   mounted() {
@@ -95,14 +102,29 @@ export default {
         layout: { name: "preset" },
       });
 
+      // Tooltip-Events für Knoten
+      this.cy.on("mouseover", "node", (event) => {
+        const node = event.target;
+        const tooltip = document.getElementById("tooltip");
+        const { left, top } = this.cy.container().getBoundingClientRect();
+
+        tooltip.style.left = `${event.renderedPosition.x + left}px`;
+        tooltip.style.top = `${event.renderedPosition.y + top}px`;
+        tooltip.innerHTML = `
+          <strong>${node.data("attributes").name || "Kein Name"}</strong><br>
+          ${node.data("attributes").description || "Keine Beschreibung"}
+        `;
+        tooltip.style.display = "block";
+      });
+
+      this.cy.on("mouseout", "node", () => {
+        const tooltip = document.getElementById("tooltip");
+        tooltip.style.display = "none";
+      });
+
       this.cy.on("tap", "node", (event) => {
         const node = event.target;
         this.handleNodeClick(node);
-        this.editNodeLabel(node);
-      });
-
-      this.cy.on("tap", "edge", (event) => {
-        this.handleEdgeClick(event.target);
       });
     },
     setAction(action) {
@@ -123,7 +145,7 @@ export default {
         this.addNode({ x: graphX, y: graphY });
       }
     },
-    addNode(position) {
+    async addNode(position) {
       let id;
       const freeIdList = this.freeIds[this.selectedNodeType];
 
@@ -137,15 +159,33 @@ export default {
 
       const label = `${this.selectedNodeType} ${id.match(/\d+/)[0]}`;
 
-      this.cy.add({
+      // API-Aufruf zum Backend, um Name und Beschreibung basierend auf dem Typ abzurufen
+      let attributes = { name: "", description: "" };
+      try {
+        const response = await axios.post("http://localhost:3000/api/get-node-details", {
+          nodeType: this.selectedNodeType,
+        });
+        if (response.data) {
+          attributes = response.data;
+          console.log("Erhaltene Attribute:", attributes); // Debugging
+        }
+      } catch (error) {
+        console.error("Error fetching node details:", error);
+      }
+
+      const newNode = this.cy.add({
         group: "nodes",
         data: {
           id: id,
           label: label,
           type: this.selectedNodeType,
+          attributes: attributes,
         },
         position: position,
       });
+      console.log("Neuer Knoten hinzugefügt:", newNode.data());
+
+      this.openPopup(newNode);
     },
     handleNodeClick(node) {
       if (this.selectedAction === "addEdge") {
@@ -161,12 +201,27 @@ export default {
           this.freeIds[nodeType].push(nodeId);
         }
         node.remove();
+      } else if (this.selectedAction === "editLabel") {
+        this.editNodeLabel(node);
+      } else {
+        this.openPopup(node);
       }
     },
-    handleEdgeClick(edge) {
-      if (this.selectedAction === "remove") {
-        edge.remove();
+    openPopup(node) {
+      this.showPopup = true;
+      this.currentNode = node;
+      this.selectedNodeAttributes = { ...node.data("attributes") };
+    },
+    closePopup() {
+      this.showPopup = false;
+      this.selectedNodeAttributes = {};
+      this.currentNode = null;
+    },
+    saveAttributes() {
+      if (this.currentNode) {
+        this.currentNode.data("attributes", { ...this.selectedNodeAttributes });
       }
+      this.closePopup();
     },
     addEdge(sourceId, targetId) {
       this.cy.add({
@@ -223,5 +278,16 @@ button,
 select,
 input {
   margin-right: 10px;
+}
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border: 1px solid #ccc;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 </style>

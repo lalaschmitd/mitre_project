@@ -10,7 +10,7 @@ Ein Tool zur Analyse von Netzwerk-Topologien basierend auf dem MITRE ATT&CK-Fram
 - **Git** (Version 2.25 oder höher)
 - **Node.js** (Version 14.x oder höher)  
   Enthält **npm** (Node Package Manager)
-- **MongoDB** (lokale oder gehostete Datenbankinstanz)
+- **xlsx** (lokale oder gehostete Datenbankinstanz)
 - **nodemon** (für die automatische Überwachung des Backends während der Entwicklung)
 
 ---
@@ -51,23 +51,9 @@ Git wird benötigt, um das Repository zu klonen.
    npm --version
    ```
 
-### MongoDB installieren
-1. **Installation unter Windows/macOS/Linux:**  
-   [Offizielle MongoDB-Installationsanleitung](https://www.mongodb.com/docs/manual/installation/).
-
-2. **Starten von MongoDB:**  
-   ```bash
-   sudo systemctl start mongod
-   ```
-
-3. **Verifikation:**  
-   Prüfen, ob MongoDB läuft:
-   ```bash
-   sudo systemctl status mongod
-   ```
-
 ### nodemon installieren
 **nodemon** wird verwendet, um den Backend-Server bei Änderungen automatisch neu zu starten.
+In einer bash oder Konsole führe folgenden Befehl aus:
 ```bash
 npm install -g nodemon
 ```
@@ -81,13 +67,21 @@ nodemon --version
 ## Installation des Projekts
 
 ### 1. Repository klonen
+Klonen ohne GitHub Desktop:
+Öffne einen Ordner, worin das Projekt gespeichert werden soll. Öffne Git Bash (Rechtsklick im Ordner evtl. noch auf "Weitere Optionen anzeigen" drüchen unter "Open Git Bash here").
+Führe folgenden Befehl aus:
 Das Repository klonen:
 ```bash
-git clone <REPOSITORY_URL>
-cd mitre-network-tool
+git clone https://github.com/lalaschmitd/mitre_project.git
+```
+Um innerhalb des Bash auf das Projektverzeichnis zuzugreifen wird dieser Befehl benötigt:
+```bash
+cd mitre_project
 ```
 
+
 ### 2. Abhängigkeiten installieren
+Nach erfolgreichem Klonen befindet sich das Projektverzeichnis in dem geöffneten Ordner. Innerhalb des Git Bash, führe weiterhin folgende Befehle aus, um die Funktionen von Node.js im Frontend und Backend zu verwenden.
 #### Frontend:
 ```bash
 cd mitre-network-tool
@@ -108,7 +102,7 @@ npm install
 Das Backend wird mit nodemon gestartet:
 ```bash
 cd backend
-nodemon app.js
+nodemon excel_api.js
 ```
 
 ### Frontend starten
